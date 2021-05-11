@@ -8,7 +8,7 @@ arch=('x86_64')
 url='https://github.com/mutschler/mt'
 license=('GPL3')
 makedepends=('git' 'go')
-source=("$_pkgname::git+https://github.com/mutschler/mt.git#branch=master")
+source=("$_pkgname::git+$url.git#branch=master")
 sha256sums=('SKIP')
 
 pkgver() {
@@ -16,11 +16,19 @@ pkgver() {
   git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
-build() {
-  export GO111MODULE=on
+prepare() {
   cd "$_pkgname"
-  go mod init github.com/mutschler/mt
-  go mod tidy
+  # convert go dep to go modules before building
+  if [ ! -f go.mod ]
+  then
+    export GO111MODULE=on
+    go mod init github.com/mutschler/mt
+    go mod tidy
+  fi
+}
+
+build() {
+  cd "$_pkgname"
   go build \
     -o "$_pkgname" \
     -trimpath \
