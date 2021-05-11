@@ -8,7 +8,9 @@ arch=('x86_64')
 url='https://github.com/derat/nitter-rss-proxy'
 license=('BSD')
 makedepends=('git' 'go')
-source=("$_pkgname::git+https://github.com/derat/nitter-rss-proxy.git#branch=main")
+provides=('nitter-rss-proxy')
+conflicts=('nitter-rss-proxy')
+source=("$_pkgname::git+$url.git#branch=main")
 sha256sums=('SKIP')
 
 pkgver() {
