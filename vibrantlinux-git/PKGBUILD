@@ -1,0 +1,44 @@
+# Maintainer: gbr <gbr@protonmail.com>
+_pkgname=vibrantlinux
+pkgname=vibrantlinux-git
+pkgrel=1
+pkgdesc='vibranceGUI replacement for Linux'
+arch=('x86_64')
+url='https://github.com/zee-mzha/vibrantlinux'
+license=('MIT')
+depends=('qt5-base' 'libvibrant')
+makedepends=('git')
+conflicts=('vibrantlinux')
+provides=('vibrantlinux')
+source=("${_pkgname}::git+https://github.com/zee-mzha/vibrantLinux.git"
+        "proper-connected-monitor-detection.patch")
+sha256sums=('SKIP'
+            'bf53bc59062475f1645a9fb59d13860adfbe897b732e35fb18cbf1864bec31ea')
+pkgver=2.1.6.r0.ga80e4c8
+
+pkgver() {
+    cd "${_pkgname}"
+
+    git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+    cd "${_pkgname}"
+
+    patch -Np1 < "${srcdir}/proper-connected-monitor-detection.patch"
+}
+
+build() {
+    cd "${_pkgname}"
+
+    qmake
+    make
+}
+
+package() {
+    cd "${_pkgname}"
+
+    make INSTALL_ROOT="${pkgdir}" install
+
+    mv "${pkgdir}/usr/share/applications/application.desktop" "${pkgdir}/usr/share/applications/vibrantLinux.desktop"
+}

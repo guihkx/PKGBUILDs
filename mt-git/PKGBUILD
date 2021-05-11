@@ -1,0 +1,42 @@
+# Maintainer: gbr <gbr@protonmail.com>
+_pkgname=mt
+pkgname=mt-git
+pkgver=1.0.10.r6.gf33bb41
+pkgrel=1
+pkgdesc='Generate video contact sheets easily'
+arch=('x86_64')
+url='https://github.com/mutschler/mt'
+license=('GPL3')
+makedepends=('git' 'go')
+source=("$_pkgname::git+https://github.com/mutschler/mt.git#branch=master")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$_pkgname"
+  git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+  export GO111MODULE=on
+  cd "$_pkgname"
+  go mod init github.com/mutschler/mt
+  go mod tidy
+  go build \
+    -o "$_pkgname" \
+    -trimpath \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-extldflags \"${LDFLAGS}\"" \
+    .
+}
+
+check() {
+  cd "$_pkgname"
+  go test -mod=readonly -v ./...
+}
+
+package() {
+  cd "$_pkgname"
+  install -Dm755 "$_pkgname" "$pkgdir/usr/bin/$_pkgname"
+}

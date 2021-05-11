@@ -1,0 +1,291 @@
+diff --git a/vibrant-cli/src/main.c b/vibrant-cli/src/main.c
+index c57d220..0f8e751 100644
+--- a/vibrant-cli/src/main.c
++++ b/vibrant-cli/src/main.c
+@@ -65,7 +65,7 @@ static vibrant_controller *find_output_by_name(vibrant_controller *controllers,
+                                                size_t controllers_size,
+                                                const char *name) {
+     for (size_t i = 0; i < controllers_size; i++) {
+-        if (strcmp(name, controllers[i].info->name) == 0) {
++        if (strcmp(name, controllers[i].name) == 0) {
+             return controllers + i;
+         }
+     }
+diff --git a/vibrant/include/vibrant/vibrant.h b/vibrant/include/vibrant/vibrant.h
+index 6f42b3a..617b4c1 100644
+--- a/vibrant/include/vibrant/vibrant.h
++++ b/vibrant/include/vibrant/vibrant.h
+@@ -70,12 +70,13 @@ struct vibrant_controller_internal;
+ typedef enum vibrant_errors {
+     vibrant_NoError,
+     vibrant_ConnectToX,
+-    vibrant_NoMem
++    vibrant_NoMem,
++    vibrant_NoActiveMonitors
+ } vibrant_errors;
+ 
+ typedef struct vibrant_controller {
+-    RROutput output;
+-    XRROutputInfo *info;
++    char *name;
++    XRRMonitorInfo *info;
+     //copy of display of the owning vibrant_instance
+     Display *display;
+ 
+diff --git a/vibrant/src/vibrant.c b/vibrant/src/vibrant.c
+index 1ba8029..510abee 100644
+--- a/vibrant/src/vibrant.c
++++ b/vibrant/src/vibrant.c
+@@ -45,7 +45,7 @@
+  * Authors: AMD
+  *
+  */
+-
++ 
+ #include "vibrant/vibrant.h"
+ #include "vibrant/ctm.h"
+ #include "vibrant/nvidia.h"
+@@ -105,87 +105,78 @@ vibrant_errors vibrant_instance_new(vibrant_instance **instance,
+         return vibrant_ConnectToX;
+     }
+ 
+-    bool dpy_has_nvidia = XNVCTRLQueryExtension(dpy, NULL, NULL);
+-
+     Window root = DefaultRootWindow(dpy);
+     XRRScreenResources *resources = XRRGetScreenResources(dpy, root);
+ 
+-    vibrant_controller *controllers = malloc(sizeof(vibrant_controller) *
+-                                             resources->noutput);
+-    if (controllers == NULL) {
+-        XRRFreeScreenResources(resources);
++    if (resources == NULL) {
+         XCloseDisplay(dpy);
+         free(*instance);
+ 
+         return vibrant_NoMem;
+     }
+-    int controllers_size = resources->noutput;
+-
+-    // filter out disconnected outputs
+-    int n_connected = 0;
+-    for (int i = 0; i < controllers_size; i++) {
+-        XRROutputInfo *info = XRRGetOutputInfo(dpy, resources,
+-                                               resources->outputs[i]);
+-
+-        if (info->connection == RR_Connected) {
+-            vibrant_controller_internal *priv =
+-                    malloc(sizeof(vibrant_controller_internal));
+-            if (priv == NULL) {
+-                // free already added controllers
+-                for (int j = 0; j < n_connected; j++) {
+-                    XRRFreeOutputInfo(controllers[j].info);
+-                    free(controllers[j].priv);
+-                }
+ 
+-                // free everything else
+-                XRRFreeScreenResources(resources);
+-                XCloseDisplay(dpy);
+-                free(controllers);
+-                free(*instance);
++    int n_active;
++    XRRMonitorInfo *monitors = XRRGetMonitors(dpy, root, True, &n_active);
+ 
+-                return vibrant_NoMem;
+-            }
++    if (monitors == NULL) {
++        XRRFreeScreenResources(resources);
++        XCloseDisplay(dpy);
++        free(*instance);
+ 
+-            *priv = (vibrant_controller_internal) {Unknown, -1};
+-            controllers[n_connected] = (vibrant_controller) {
+-                    resources->outputs[i], info,
+-                    dpy, priv};
+-            n_connected++;
+-        } else {
+-            XRRFreeOutputInfo(info);
+-        }
++        return vibrant_NoMem;
+     }
+ 
+-    // resize to only include connected displays
+-    vibrant_controller *tmp = realloc(controllers,
+-                                      sizeof(vibrant_controller) * n_connected);
++    if (n_active < 1) {
++        XRRFreeMonitors(monitors);
++        XRRFreeScreenResources(resources);
++        XCloseDisplay(dpy);
++        free(*instance);
+ 
+-    /**
+-     * realloc may return NULL if size is 0, depending on the C implementation.
+-     * realloc with size 0 is equivalent to free, except for the return value.
+-     * Let's force this, so that we don't get any broken pointers.
+-     */
+-    if (n_connected == 0) {
+-        controllers = NULL;
++        return vibrant_NoActiveMonitors;
+     }
+ 
+-    if (n_connected > 0 && tmp == NULL) {
+-        for (int i = 0; i < n_connected; i++) {
+-            XRRFreeOutputInfo(controllers[i].info);
+-            free(controllers[i].priv);
+-        }
+-
++    vibrant_controller *controllers = malloc(sizeof(vibrant_controller) *
++                                             n_active);
++    if (controllers == NULL) {
++        XRRFreeMonitors(monitors);
+         XRRFreeScreenResources(resources);
+         XCloseDisplay(dpy);
+-        free(controllers);
+         free(*instance);
+ 
+         return vibrant_NoMem;
+     }
+ 
+-    controllers = tmp;
+-    controllers_size = n_connected;
++    for (int i = 0; i < n_active; i++) {
++        vibrant_controller_internal *priv =
++                malloc(sizeof(vibrant_controller_internal));
++        if (priv == NULL) {
++            // free already added controllers
++            // this could fail at index 0, so make
++            // we are not freeing an uninitalized variable
++            for (int j = 0; j < i; j++) {
++                XFree(controllers[j].name);
++                free(controllers[j].priv);
++            }
+ 
++            // free everything else
++            XRRFreeMonitors(monitors);
++            XRRFreeScreenResources(resources);
++            XCloseDisplay(dpy);
++            free(controllers);
++            free(*instance);
++
++            return vibrant_NoMem;
++        }
++
++        // convert monitor name
++        // FIXME check for null return value
++        char *name = XGetAtomName(dpy, monitors[i].name);
++        *priv = (vibrant_controller_internal) {Unknown, -1};
++        controllers[i] = (vibrant_controller) {
++                name, &monitors[i], dpy, priv};
++    }
++
++    bool dpy_has_nvidia = XNVCTRLQueryExtension(dpy, NULL, NULL);
+     /**
+      * Check all available screens and outputs if they are managed by NVIDIA.
+      * If they are set their backend and nvIds
+@@ -214,8 +205,8 @@ vibrant_errors vibrant_instance_new(vibrant_instance **instance,
+                                                 nvDpyIds[j], 0,
+                                                 NV_CTRL_DISPLAY_RANDR_OUTPUT_ID,
+                                                 &output);
+-                    for (size_t k = 0; k < controllers_size; k++) {
+-                        if (controllers[k].output == output) {
++                    for (size_t k = 0; k < n_active; k++) {
++                        if (*(controllers[k].info->outputs) == output) {
+                             controllers[k].priv->backend = XNVCtrl;
+                             controllers[k].priv->nvId = nvDpyIds[j];
+                             controllers[k].priv->get_saturation = nvctrl_get_saturation;
+@@ -231,9 +222,9 @@ vibrant_errors vibrant_instance_new(vibrant_instance **instance,
+      * Check remaining outputs if they support the CTM setting and set their
+      * respective backend
+     */
+-    for (size_t i = 0; i < controllers_size; i++) {
++    for (size_t i = 0; i < n_active; i++) {
+         if (controllers[i].priv->backend == Unknown) {
+-            if (ctm_output_has_ctm(dpy, controllers[i].output)) {
++            if (ctm_output_has_ctm(dpy, *(controllers[i].info->outputs))) {
+                 controllers[i].priv->backend = CTM;
+                 controllers[i].priv->get_saturation = ctmctrl_get_saturation;
+                 controllers[i].priv->set_saturation = ctmctrl_set_saturation;
+@@ -244,46 +235,21 @@ vibrant_errors vibrant_instance_new(vibrant_instance **instance,
+     /**
+      * Remove all remaining outputs, as they are not supported.
+      */
+-    for (int i = 0; i < controllers_size; i++) {
++    for (int i = 0; i < n_active; i++) {
+         if (controllers[i].priv->backend == Unknown) {
+-            XRRFreeOutputInfo(controllers[i].info);
++            XFree(controllers[i].name);
+             free(controllers[i].priv);
+ 
+             // move all controllers after i one "to the left"
+             memmove(controllers + i, controllers + i + 1,
+                     sizeof(vibrant_controller) *
+-                    (controllers_size - i - 1));
+-            controllers_size--;
++                    (n_active - i - 1));
++            n_active--;
+             i--;  // stay at current index, as we just popped this index
+         }
+     }
+ 
+-    tmp = realloc(controllers, sizeof(vibrant_controller) * controllers_size);
+-
+-    /**
+-     * realloc may return NULL if size is 0, depending on the C implementation.
+-     * realloc with size 0 is equivalent to free, except for the return value.
+-     * Let's force this, so that we don't get any broken pointers.
+-     */
+-    if (controllers_size == 0) {
+-        controllers = NULL;
+-    }
+-
+-    if (controllers_size > 0 && tmp == NULL) {
+-        for (int i = 0; i < controllers_size; i++) {
+-            XRRFreeOutputInfo(controllers[i].info);
+-            free(controllers[i].priv);
+-        }
+-
+-        XRRFreeScreenResources(resources);
+-        XCloseDisplay(dpy);
+-        free(controllers);
+-        free(*instance);
+-
+-        return vibrant_NoMem;
+-    }
+-
+-    **instance = (vibrant_instance) {dpy, controllers, controllers_size};
++    **instance = (vibrant_instance) {dpy, controllers, n_active};
+     XRRFreeScreenResources(resources);
+ 
+     return vibrant_NoError;
+@@ -291,13 +257,15 @@ vibrant_errors vibrant_instance_new(vibrant_instance **instance,
+ 
+ void vibrant_instance_free(vibrant_instance **instance) {
+     for (int i = 0; i < (*instance)->controllers_size; i++) {
+-        XRRFreeOutputInfo((*instance)->controllers[i].info);
++        XFree((*instance)->controllers[i].name);
++        // FIXME
++        // XFree(&(*instance)->controllers[0].priv->nvId);
+         free((*instance)->controllers[i].priv);
+     }
+-
++    XRRFreeMonitors((*instance)->controllers[0].info);
+     free((*instance)->controllers);
+     XCloseDisplay((*instance)->dpy);
+-
++ 
+     free(*instance);
+     instance = NULL;
+ }
+@@ -319,11 +287,11 @@ void vibrant_controller_set_saturation(vibrant_controller *controller,
+ }
+ 
+ double ctmctrl_get_saturation(vibrant_controller *controller) {
+-    return ctm_get_saturation(controller->display, controller->output, NULL);
++    return ctm_get_saturation(controller->display, *controller->info->outputs, NULL);
+ }
+ 
+ void ctmctrl_set_saturation(vibrant_controller *controller, double saturation) {
+-    ctm_set_saturation(controller->display, controller->output, saturation,
++    ctm_set_saturation(controller->display, *controller->info->outputs, saturation,
+                        NULL);
+ }
+ 

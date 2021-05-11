@@ -1,0 +1,82 @@
+diff --git a/include/entryeditor.h b/include/entryeditor.h
+index 4d8d103..bedb41d 100644
+--- a/include/entryeditor.h
++++ b/include/entryeditor.h
+@@ -26,7 +26,7 @@ public:
+ 	 * because we want to the names to show up in the same order everytime the program is run
+ 	 * and that is not guaranteed when iterating over a QHash
+ 	*/
+-	explicit entryEditor(programInfo& entry, const QStringList& displayNames, QWidget* parent = nullptr);
++	explicit entryEditor(bool isNew, programInfo& entry, const QStringList& displayNames, QWidget* parent = nullptr);
+ 	~entryEditor();
+ 
+ private slots:
+diff --git a/src/displaymanager.cpp b/src/displaymanager.cpp
+index 5bf95d5..87b67a4 100644
+--- a/src/displaymanager.cpp
++++ b/src/displaymanager.cpp
+@@ -17,7 +17,7 @@ displayManager::displayManager(): scanner(true){
+ 	}
+ 
+ 	for(size_t i = 0; i < controllers_size; i++){
+-		auto name = controllers_arr[i].info->name;
++		auto name = controllers_arr[i].name;
+ 
+ 		displays.append(name);
+ 		controllers.insert(name, (controller){controllers_arr+i, 100});
+diff --git a/src/entryeditor.cpp b/src/entryeditor.cpp
+index 1c333d1..1dc8621 100644
+--- a/src/entryeditor.cpp
++++ b/src/entryeditor.cpp
+@@ -1,7 +1,7 @@
+ #include "entryeditor.h"
+ #include "ui_entryeditor.h"
+ 
+-entryEditor::entryEditor(programInfo& entry, const QStringList& displayNames, QWidget* parent) : QDialog(parent),
++entryEditor::entryEditor(bool isNew, programInfo& entry, const QStringList& displayNames, QWidget* parent) : QDialog(parent),
+ ui(new Ui::entryEditor), entry(entry){
+ 	ui->setupUi(this);
+ 
+@@ -28,6 +28,8 @@ ui(new Ui::entryEditor), entry(entry){
+ 			case programInfo::RegexMatchTitle:
+ 				ui->titleMatchTypeCb->setCurrentIndex(2);
+ 				break;
++			default:
++				break;
+ 		}
+ 		ui->titleMatchTypeCb->currentIndex();
+ 	}
+@@ -37,8 +39,9 @@ ui(new Ui::entryEditor), entry(entry){
+ 		if(dpyTab == nullptr){
+ 			throw std::runtime_error("failed to create display tab");
+ 		}
+-
+-		dpyTab->setSaturation(entry.saturationVals[name]);
++		if(!isNew) {
++			dpyTab->setSaturation(entry.saturationVals[name]);
++		}
+ 		ui->displays->addTab(dpyTab, name);
+ 	}
+ }
+diff --git a/src/mainwindow.cpp b/src/mainwindow.cpp
+index dd7a093..6b9ae59 100644
+--- a/src/mainwindow.cpp
++++ b/src/mainwindow.cpp
+@@ -366,7 +366,7 @@ void mainWindow::on_vibranceFocusToggle_clicked(bool checked){
+ void mainWindow::on_addProgram_clicked(){
+ 	programInfo info(programInfo::entryType::MatchPath, "", QHash<QString, int>());
+ 
+-	entryEditor editor(info, displayNames, this);
++	entryEditor editor(true, info, displayNames, this);
+ 	if(editor.exec() == QDialog::Accepted){
+ 		addEntry(info);
+ 		writeConfig();
+@@ -387,7 +387,7 @@ void mainWindow::on_programs_doubleClicked(const QModelIndex &index){
+ 	QListWidgetItem *item = ui->programs->item(index.row());
+ 	auto info = item->data(Qt::UserRole).value<programInfo*>();
+ 
+-	entryEditor editor(*info, displayNames, this);
++	entryEditor editor(false, *info, displayNames, this);
+ 	if(editor.exec() == QDialog::Accepted){
+ 		if(info->type == programInfo::entryType::MatchPath){
+ 			item->setText(programInfo::exeNameFromPath(info->matchString));

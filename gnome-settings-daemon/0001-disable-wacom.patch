@@ -1,0 +1,13 @@
+diff --git a/meson.build b/meson.build
+index 851341d7..cb1a91ae 100644
+--- a/meson.build
++++ b/meson.build
+@@ -152,7 +152,7 @@ endif
+ config_h.set10('HAVE_WAYLAND', enable_wayland)
+ 
+ # wacom (disabled for s390/s390x and non Linux platforms)
+-enable_wacom = host_is_linux_not_s390
++enable_wacom = false
+ if enable_wacom
+   assert(enable_gudev, 'GUDev support is required for wacom support.')
+   libwacom_dep = dependency('libwacom', version: '>= 0.7')

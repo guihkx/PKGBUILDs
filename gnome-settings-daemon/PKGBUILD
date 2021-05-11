@@ -1,0 +1,54 @@
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+
+pkgname=gnome-settings-daemon
+pkgver=40.0.1
+pkgrel=1
+pkgdesc="GNOME Settings Daemon"
+url="https://gitlab.gnome.org/GNOME/gnome-settings-daemon"
+arch=(x86_64)
+license=(GPL)
+depends=(dconf gnome-desktop gsettings-desktop-schemas libcanberra-pulse libnotify systemd-libs
+         pulseaudio pulseaudio-alsa upower librsvg libgweather geocode-glib geoclue nss
+         libgudev gtk3 libnm gcr)
+makedepends=(libxslt docbook-xsl python git meson usbguard)
+checkdepends=(python-gobject python-dbusmock)
+optdepends=('usbguard: USB protection support')
+groups=(gnome)
+backup=(etc/xdg/Xwayland-session.d/00-xrdb)
+_commit=f33abac1de0c8cecd8ededa75200648c6470e406  # tags/40.0.1^0
+source=("git+https://gitlab.gnome.org/GNOME/gnome-settings-daemon.git#commit=$_commit"
+        "git+https://gitlab.gnome.org/GNOME/libgnome-volume-control.git"
+        "0001-disable-wacom.patch"
+        "0002-enable-keyboard-shortcuts-on-popups.patch")
+sha256sums=('SKIP'
+            'SKIP'
+            '11adfa0ac3e431d6c923d1b683ca96a9f8278bce0e531074eafeec05ab7feef3'
+            'ed68d95928ad0c08f8a0b5e1c8f79ab5bc6c45cb5db3df2283ec5fb94647f3f8')
+
+pkgver() {
+  cd $pkgname
+  git describe --tags | sed 's/^GNOME_SETTINGS_DAEMON_//;s/_/./g;s/-/+/g'
+}
+
+prepare() {
+  cd $pkgname
+
+  git submodule init
+  git submodule set-url subprojects/gvc "$srcdir/libgnome-volume-control"
+  git submodule update
+  patch --forward --strip=1 --input="${srcdir}/0001-disable-wacom.patch"
+  patch --forward --strip=1 --input="${srcdir}/0002-enable-keyboard-shortcuts-on-popups.patch"
+}
+
+build() {
+  arch-meson $pkgname build -D cups=false -D smartcard=false -D wwan=false
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  DESTDIR="$pkgdir" meson install -C build
+}

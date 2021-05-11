@@ -1,0 +1,40 @@
+# Maintainer: gbr <gbr@protonmail.com>
+_pkgname=nitter-rss-proxy
+pkgname=nitter-rss-proxy-git
+pkgver=r9.d849893
+pkgrel=1
+pkgdesc='HTTP server that proxies Twitter RSS feeds served by Nitter'
+arch=('x86_64')
+url='https://github.com/derat/nitter-rss-proxy'
+license=('BSD')
+makedepends=('git' 'go')
+source=("$_pkgname::git+https://github.com/derat/nitter-rss-proxy.git#branch=main")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$_pkgname"
+  printf 'r%s.%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+  cd "$_pkgname"
+  go build \
+    -o "$_pkgname" \
+    -trimpath \
+    -buildmode=pie \
+    -mod=readonly \
+    -modcacherw \
+    -ldflags "-extldflags \"${LDFLAGS}\"" \
+    .
+}
+
+check() {
+  cd "$_pkgname"
+  go test -v ./...
+}
+
+package() {
+  cd "$_pkgname"
+  install -Dm755 "$_pkgname" "$pkgdir/usr/bin/$_pkgname"
+  install -Dm644 'LICENSE' "$pkgdir/usr/share/licenses/$_pkgname/LICENSE"
+}
