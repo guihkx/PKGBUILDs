@@ -1,7 +1,7 @@
 # Maintainer: gbr <gbr@protonmail.com>
 _pkgname=mt
 pkgname=mt-git
-pkgver=1.0.10.r6.gf33bb41
+pkgver=1.0.11.r0.g5886e4f
 pkgrel=1
 pkgdesc='Generate video contact sheets easily'
 arch=('x86_64')
@@ -14,17 +14,6 @@ sha256sums=('SKIP')
 pkgver() {
   cd "$_pkgname"
   git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
-}
-
-prepare() {
-  cd "$_pkgname"
-  # convert go dep to go modules before building
-  if [ ! -f go.mod ]
-  then
-    export GO111MODULE=on
-    go mod init github.com/mutschler/mt
-    go mod tidy
-  fi
 }
 
 build() {
