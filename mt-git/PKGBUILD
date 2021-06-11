@@ -1,7 +1,7 @@
 # Maintainer: gbr <gbr@protonmail.com>
 _pkgname=mt
 pkgname=mt-git
-pkgver=1.0.11.r0.g5886e4f
+pkgver=1.0.11.r2.g39e3e60
 pkgrel=1
 pkgdesc='Generate video contact sheets easily'
 arch=('x86_64')
