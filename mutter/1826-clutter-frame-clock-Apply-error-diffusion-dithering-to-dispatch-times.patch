@@ -1,4 +1,4 @@
-From 3ddf2e394dd2413be050a885423bac338948a954 Mon Sep 17 00:00:00 2001
+From 98105404f3feb55f94e835b3b3f14c227415c897 Mon Sep 17 00:00:00 2001
 From: Daniel van Vugt <daniel.van.vugt@canonical.com>
 Date: Wed, 15 Jul 2020 17:03:27 +0800
 Subject: [PATCH 1/2] clutter/frame-clock: Remember the refresh interval
@@ -79,7 +79,7 @@ index 05e79e6626..fe77e3d1d5 100644
 GitLab
 
 
-From 2fa74be41cd3583fc920d00a8c353e3f9d97721b Mon Sep 17 00:00:00 2001
+From 1933bfabf77daefafbd930872a5a8b53f1c3438b Mon Sep 17 00:00:00 2001
 From: Daniel van Vugt <daniel.van.vugt@canonical.com>
 Date: Thu, 15 Apr 2021 20:30:31 +0800
 Subject: [PATCH 2/2] clutter/frame-clock: Apply error diffusion (dithering) to
@@ -91,13 +91,15 @@ But only the dispatch times used when `last_presentation_time_us == 0`
 This ensures the average dispatch interval is always precisely equal
 to the refresh interval, regardless of any jitter in the mainloop.
 
-Fixes: https://gitlab.gnome.org/GNOME/mutter/-/issues/1751
+Fixes: https://gitlab.gnome.org/GNOME/mutter/-/issues/1751,
+       https://gitlab.gnome.org/GNOME/mutter/-/issues/1758,
+       https://gitlab.gnome.org/GNOME/mutter/-/issues/1870
 ---
- clutter/clutter/clutter-frame-clock.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ clutter/clutter/clutter-frame-clock.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/clutter/clutter/clutter-frame-clock.c b/clutter/clutter/clutter-frame-clock.c
-index fe77e3d1d5..107cfd67fc 100644
+index fe77e3d1d5..25ab2b7fe2 100644
 --- a/clutter/clutter/clutter-frame-clock.c
 +++ b/clutter/clutter/clutter-frame-clock.c
 @@ -72,6 +72,7 @@ struct _ClutterFrameClock
@@ -108,18 +110,17 @@ index fe77e3d1d5..107cfd67fc 100644
    int64_t last_presentation_time_us;
  
    gboolean is_next_presentation_time_valid;
-@@ -254,7 +255,9 @@ calculate_next_update_time_us (ClutterFrameClock *frame_clock,
+@@ -254,7 +255,8 @@ calculate_next_update_time_us (ClutterFrameClock *frame_clock,
      {
        *out_next_update_time_us =
          frame_clock->last_dispatch_time_us ?
 -        frame_clock->last_dispatch_time_us + refresh_interval_us :
-+        frame_clock->last_dispatch_time_us -
-+          frame_clock->last_dispatch_lateness_us +
-+          refresh_interval_us :
++        ((frame_clock->last_dispatch_time_us -
++          frame_clock->last_dispatch_lateness_us) + refresh_interval_us) :
          now_us;
  
        *out_next_presentation_time_us = 0;
-@@ -488,9 +491,20 @@ clutter_frame_clock_dispatch (ClutterFrameClock *frame_clock,
+@@ -488,9 +490,20 @@ clutter_frame_clock_dispatch (ClutterFrameClock *frame_clock,
  {
    int64_t frame_count;
    ClutterFrameResult result;
@@ -127,9 +128,9 @@ index fe77e3d1d5..107cfd67fc 100644
  
    COGL_TRACE_BEGIN_SCOPED (ClutterFrameClockDispatch, "Frame Clock (dispatch)");
  
-+  ideal_dispatch_time_us = frame_clock->last_dispatch_time_us
-+                         - frame_clock->last_dispatch_lateness_us
-+                         + frame_clock->refresh_interval_us;
++  ideal_dispatch_time_us = (frame_clock->last_dispatch_time_us -
++                            frame_clock->last_dispatch_lateness_us) +
++                           frame_clock->refresh_interval_us;
 +
 +  lateness_us = time_us - ideal_dispatch_time_us;
 +  if (lateness_us < 0 || lateness_us >= frame_clock->refresh_interval_us)
