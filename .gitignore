@@ -10,8 +10,6 @@ gnome-settings-daemon/gnome-settings-daemon/
 
 gnome-shell/gnome-shell/
 
-mpd-mpris-git/mpd-mpris/
-
 mutter/mutter/
 
 # FIXME can't include this due to licensing purposes
