@@ -4,6 +4,9 @@
 **/*.sig
 **/*.tar.*
 
+adwaita-qt-git/adwaita-qt
+adwaita-qt-git/adwaita-qt5
+
 gnome-control-center/gnome-control-center/
 
 gnome-settings-daemon/gnome-settings-daemon/
