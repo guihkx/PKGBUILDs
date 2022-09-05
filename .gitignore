@@ -15,6 +15,9 @@ gnome-shell/gnome-shell/
 
 mutter/mutter/
 
+qgnomeplatform-git/QGnomePlatform
+qgnomeplatform-git/qgnomeplatform-qt5-git
+
 # FIXME can't include this due to licensing purposes
 ttf-ms-win10/
 
