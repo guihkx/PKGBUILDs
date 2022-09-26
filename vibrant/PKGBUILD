@@ -3,13 +3,13 @@
 pkgbase=vibrant
 pkgname=(libvibrant vibrant-cli)
 pkgver=1.0.3
-pkgrel=2
+pkgrel=4
 pkgdesc="A simple library to adjust color saturation of X11 outputs."
 arch=(x86_64)
-url="https://gitlab.com/Scrumplex/vibrant"
+url="https://github.com/libvibrant/libvibrant"
 license=("GPL3" "custom:MIT")
 makedepends=("git" "cmake" "libxrandr" "libxnvctrl")
-source=("${pkgbase}::git+https://gitlab.com/Scrumplex/vibrant.git#tag=${pkgver}"
+source=("${pkgbase}::git+https://github.com/libvibrant/libvibrant.git#tag=${pkgver}"
         "proper-connected-monitor-detection.patch")
 sha512sums=('SKIP'
             'de5346bf6683c926d86e388db4ba2b86c205fe2c3cb0730692e9bb7d37c4b3c464d290379815673808b0cd8b775cf32ecc9a7ff5489a36aa84cd71960c3195e9')
