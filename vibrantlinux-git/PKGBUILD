@@ -4,17 +4,17 @@ pkgname=vibrantlinux-git
 pkgrel=1
 pkgdesc='vibranceGUI replacement for Linux'
 arch=('x86_64')
-url='https://github.com/zee-mzha/vibrantlinux'
+url='https://github.com/libvibrant/vibrantLinux'
 license=('MIT')
 depends=('qt5-base' 'libvibrant')
 makedepends=('git')
 conflicts=('vibrantlinux')
 provides=('vibrantlinux')
-source=("${_pkgname}::git+https://github.com/zee-mzha/vibrantLinux.git"
+source=("${_pkgname}::git+${url}.git"
         "proper-connected-monitor-detection.patch")
 sha256sums=('SKIP'
             'bf53bc59062475f1645a9fb59d13860adfbe897b732e35fb18cbf1864bec31ea')
-pkgver=2.1.6.r0.ga80e4c8
+pkgver=2.1.10.r0.g5877b71
 
 pkgver() {
     cd "${_pkgname}"
@@ -40,5 +40,6 @@ package() {
 
     make INSTALL_ROOT="${pkgdir}" install
 
-    mv "${pkgdir}/usr/share/applications/application.desktop" "${pkgdir}/usr/share/applications/vibrantLinux.desktop"
+    install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    install -Dm644 "README.md" "${pkgdir}/usr/share/doc/${pkgname}/README.md"
 }
