@@ -3,6 +3,7 @@
 **/libgnome-volume-control/
 **/*.sig
 **/*.tar.*
+**/*.run
 
 adwaita-qt-git/adwaita-qt
 adwaita-qt-git/adwaita-qt5
