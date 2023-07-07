@@ -8,6 +8,9 @@
 adwaita-qt-git/adwaita-qt
 adwaita-qt-git/adwaita-qt5
 
+ffmpeg/ffmpeg
+ffmpeg/nv-codec-headers
+
 gnome-control-center/gnome-control-center/
 
 gnome-settings-daemon/gnome-settings-daemon/
