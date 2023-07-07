@@ -8,8 +8,6 @@
 ffmpeg/ffmpeg
 ffmpeg/nv-codec-headers
 
-gnome-settings-daemon/gnome-settings-daemon/
-
 gnome-shell/gnome-shell/
 
 mutter/mutter/
