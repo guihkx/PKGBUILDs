@@ -5,9 +5,6 @@
 **/*.tar.*
 **/*.run
 
-adwaita-qt-git/adwaita-qt
-adwaita-qt-git/adwaita-qt5
-
 ffmpeg/ffmpeg
 ffmpeg/nv-codec-headers
 
