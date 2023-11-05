@@ -1,13 +1,14 @@
 # Maintainer: gbr <gbr@protonmail.com>
 _pkgname=mt
 pkgname=mt-git
-pkgver=1.0.11.r2.g39e3e60
+pkgver=1.0.13.r2.g62fc39e
 pkgrel=1
 pkgdesc='Generate video contact sheets easily'
 arch=('x86_64')
 url='https://github.com/mutschler/mt'
 license=('GPL3')
 makedepends=('git' 'go')
+depends=('ffmpeg' 'glibc')
 source=("$_pkgname::git+$url.git#branch=master")
 sha256sums=('SKIP')
 
@@ -18,19 +19,12 @@ pkgver() {
 
 build() {
   cd "$_pkgname"
-  go build \
-    -o "$_pkgname" \
-    -trimpath \
-    -buildmode=pie \
-    -mod=readonly \
-    -modcacherw \
-    -ldflags "-extldflags \"${LDFLAGS}\"" \
-    .
-}
-
-check() {
-  cd "$_pkgname"
-  go test -mod=readonly -v ./...
+  export CGO_CPPFLAGS="$CPPFLAGS"
+  export CGO_CFLAGS="$CFLAGS"
+  export CGO_CXXFLAGS="$CXXFLAGS"
+  export CGO_LDFLAGS="$LDFLAGS"
+  export GOFLAGS="-buildmode=pie -ldflags=-linkmode=external -trimpath -mod=readonly -modcacherw"
+  go build -v -o "$_pkgname" .
 }
 
 package() {

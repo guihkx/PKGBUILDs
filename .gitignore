@@ -8,6 +8,8 @@
 ffmpeg/ffmpeg
 ffmpeg/nv-codec-headers
 
+mt-git/mt/
+
 # FIXME can't include this due to licensing purposes
 ttf-ms-win10/
 
