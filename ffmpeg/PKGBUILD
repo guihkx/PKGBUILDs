@@ -6,7 +6,7 @@
 
 pkgname=ffmpeg
 pkgver=6.0
-pkgrel=8
+pkgrel=13
 epoch=2
 pkgdesc='Complete solution to record, convert and stream audio and video'
 arch=(x86_64)
@@ -33,7 +33,6 @@ depends=(
   libgl
   libiec61883
   libjxl.so
-  libmfx
   libmodplug
   libopenmpt.so
   libpulse
@@ -62,6 +61,7 @@ depends=(
   libxvidcore.so
   libzimg.so
   ocl-icd
+  onevpl
   opencore-amr
   openjpeg2
   opus
@@ -88,7 +88,8 @@ makedepends=(
 )
 optdepends=(
   'avisynthplus: AviSynthPlus support'
-  'intel-media-sdk: Intel QuickSync support'
+  'intel-media-sdk: Intel QuickSync support (legacy)'
+  'onevpl-intel-gpu: Intel QuickSync support'
   'ladspa: LADSPA filters'
   'nvidia-utils: Nvidia NVDEC/NVENC support'
 )
@@ -106,7 +107,7 @@ options=(
   debug
 )
 _tag=3949db4d261748a9f34358a388ee255ad1a7f0c0
-_nvcodec_tag=f8ae7a49bfef2f99d2c931a791dc3863fda67bf3 # n11.1.5.2
+_nvcodec_tag=43d91706e097565f57b311e567f0219838bcc2f6 # n11.1.5.3
 source=(
   git+https://git.ffmpeg.org/ffmpeg.git#tag=${_tag}
   git+https://git.videolan.org/git/ffmpeg/nv-codec-headers.git#tag=${_nvcodec_tag}
@@ -118,7 +119,14 @@ b2sums=('SKIP'
 
 prepare() {
   cd ffmpeg
+  # FS#79281: fix assembling with binutil as >= 2.41
+  git cherry-pick -n effadce6c756247ea8bae32dc13bb3e6f464f0eb
+  # FS#77813: fix playing ogg files with mplayer
+  git cherry-pick -n cbcc817353a019da4332ad43deb7bbc4e695d02a
   patch -Np1 -i ../add-av_stream_get_first_dts-for-chromium.patch # https://crbug.com/1251779
+  # use non-deprecated nvenc GUID for conftest
+  git cherry-pick -n 03823ac0c6a38bd6ba972539e3203a592579792f
+  git cherry-pick -n d2b46c1ef768bc31ba9180f6d469d5b8be677500
 }
 
 pkgver() {
@@ -159,7 +167,6 @@ build() {
     --enable-libiec61883 \
     --enable-libjack \
     --enable-libjxl \
-    --enable-libmfx \
     --enable-libmodplug \
     --enable-libmp3lame \
     --enable-libopencore_amrnb \
@@ -180,6 +187,7 @@ build() {
     --enable-libvidstab \
     --enable-libvmaf \
     --enable-libvorbis \
+    --enable-libvpl \
     --enable-libvpx \
     --enable-libwebp \
     --enable-libx264 \
