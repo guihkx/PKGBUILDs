@@ -1,0 +1,38 @@
+# Maintainer: Mubashshir <ahmubashshir@gmail.com>
+# Original Package: gbr <gbr@protonmail.com>
+
+_pkgbase=nvidia-settings
+pkgname=lib32-libxnvctrl-470xx
+pkgver=470.239.06
+pkgrel=1
+pkgdesc='NVIDIA NV-CONTROL X extension (470 legacy branch, 32-bit)'
+url='https://github.com/NVIDIA/nvidia-settings'
+arch=('x86_64')
+license=('GPL2')
+depends=('lib32-gcc-libs' 'lib32-libxext')
+provides=('lib32-libxnvctrl' 'libXNVCtrl.so=0-32')
+conflicts=('lib32-libxnvctrl')
+source=(${_pkgbase}-${pkgver}.tar.gz::https://github.com/NVIDIA/nvidia-settings/archive/${pkgver}.tar.gz
+        'libxnvctrl_so.patch')
+sha512sums=('50640b790e96c4e76cb91983b23d7be8d906f96ebd517b2b7f24445e164c6444b3c686c914b86a3a6198b23082a02165b9e87eba238dfbbd2c74b949e1355c13'
+            '91ff94736063b911c83b8876fe3e3778db82e0ffe0102036d81a3a6e872ca44a585914646fcbbbe399cd63aa17685fc7f73263ec4f4084f48768ca4d704037fa')
+
+prepare() {
+  cd "$_pkgbase-$pkgver"
+  patch -p0 < "$srcdir/libxnvctrl_so.patch"
+}
+
+build() {
+  export PREFIX=/usr
+  export OUTPUTDIR=out
+  export CC='gcc -m32'
+  export CXX='g++ -m32'
+  export PKG_CONFIG='i686-pc-linux-gnu-pkg-config'
+  make -C "$_pkgbase-$pkgver/src/libXNVCtrl"
+}
+
+package() {
+  install -d "$pkgdir/usr/lib32"
+  cd "$_pkgbase-$pkgver/src/libXNVCtrl/out"
+  cp -Pr libXNVCtrl.* -t "$pkgdir/usr/lib32"
+}
