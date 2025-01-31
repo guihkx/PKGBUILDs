@@ -1,6 +1,5 @@
 **/pkg/
 **/src/
-**/libgnome-volume-control/
 **/*.sig
 **/*.tar.*
 **/*.run
@@ -10,8 +9,6 @@ ffmpeg/nv-codec-headers
 
 mt-git/mt/
 
-# FIXME can't include this due to licensing purposes
-ttf-ms-win10/
 
 vibrant/vibrant/
 
