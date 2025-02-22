@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: guihkx <626206+guihkx@users.noreply.github.com>
+Date: Sat, 22 Feb 2025 02:45:20 -0300
+Subject: chore: list entries to determine if a keychain is available
+
+Instead of adding a new entry, getting the entry, and then deleting it
+everytime the bridge starts up.
+
+This is mostly useful for Secret Service providers such as KeePassXC,
+where adding/deleting entries causes the passwords database to be
+modified needlessly.
+---
+ pkg/keychain/keychain.go | 18 ++----------------
+ 1 file changed, 2 insertions(+), 16 deletions(-)
+
+diff --git a/pkg/keychain/keychain.go b/pkg/keychain/keychain.go
+index 7f9dbdec..7259eec1 100644
+--- a/pkg/keychain/keychain.go
++++ b/pkg/keychain/keychain.go
+@@ -218,22 +218,8 @@ func isUsable(helper credentials.Helper, err error) bool { //nolint:unused
+ 		return false
+ 	}
+ 
+-	creds := getTestCredentials()
+-
+-	if err := retry(func() error {
+-		return helper.Add(creds)
+-	}); err != nil {
+-		l.WithError(err).Warn("Failed to add test credentials to keychain")
+-		return false
+-	}
+-
+-	if _, _, err := helper.Get(creds.ServerURL); err != nil {
+-		l.WithError(err).Warn("Failed to get test credentials from keychain")
+-		return false
+-	}
+-
+-	if err := helper.Delete(creds.ServerURL); err != nil {
+-		l.WithError(err).Warn("Failed to delete test credentials from keychain")
++	if _, err := helper.List(); err != nil {
++		l.WithError(err).Warn("Failed to list credentials from keychain")
+ 		return false
+ 	}
+ 
+-- 
+2.48.1
+
