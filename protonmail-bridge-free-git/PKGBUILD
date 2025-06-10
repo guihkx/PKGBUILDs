@@ -4,7 +4,7 @@ pkgname=(
   protonmail-bridge-core-free-git
   protonmail-bridge-free-git
 )
-pkgver=3.20.0.r123.gc185d8f
+pkgver=3.20.1.r125.g7e95bb0
 pkgrel=1
 pkgdesc="Integrate ProtonMail paid account with any program that supports IMAP and SMTP (with free user support)"
 arch=(x86_64)
