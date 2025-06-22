@@ -1,0 +1,14 @@
+diff --git a/internal/frontend/bridge-gui/bridge-gui/QMLBackend.cpp b/internal/frontend/bridge-gui/bridge-gui/QMLBackend.cpp
+index 9beeb51a..334a98c7 100644
+--- a/internal/frontend/bridge-gui/bridge-gui/QMLBackend.cpp
++++ b/internal/frontend/bridge-gui/bridge-gui/QMLBackend.cpp
+@@ -65,6 +65,9 @@ void QMLBackend::init(GRPCConfig const &serviceConfig) {
+ 
+     trayIcon_.reset(new TrayIcon());
+     connect(this, &QMLBackend::trayIconVisibleChanged, trayIcon_.get(), &TrayIcon::setVisible);
++    connect(qApp, &QCoreApplication::aboutToQuit, this, [this] {
++        trayIcon_.reset();
++    });
+     log.info(QString("Tray icon is visible: %1").arg(trayIcon_->isVisible() ? "true" : "false"));
+     this->setNormalTrayIcon();
+ 
