@@ -5,9 +5,9 @@
 # Contributor: speps <speps dot aur dot archlinux dot org>
 
 _pkgname=rssguard
-_commit=45f8b159261de20f16e69701f16fed7f29100480
+_commit=459f5a8a4a7621f3fc578cfa49ef18bd46121644
 pkgname=rssguard-lite
-pkgver=4.8.5.r11.g45f8b15
+pkgver=4.8.5.r13.g459f5a8
 pkgrel=1
 pkgdesc='Simple (yet powerful) Qt feed reader without WebEngine support'
 arch=(x86_64)
@@ -32,15 +32,13 @@ conflicts=(rssguard)
 provides=(rssguard=$pkgver)
 replaces=(rssguard-nowebengine)
 source=(git+https://github.com/martinrotter/rssguard#commit=$_commit)
-sha256sums=('f8a30600cefcf7bead6e2a827e22c53cdcb19e43622cf5a3a5326ddf9201050d')
+sha256sums=('ba37cdd63e8ac82996a9095b6d0ea6b6dbb64b80390d297dc350086445f4219c')
 
 pkgver() {
   git -C "$srcdir/$_pkgname" describe --long --abbrev=7 | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
 prepare() {
-  # revert: do not mark updated articles automatically as unread - only affects classic RSS/ATOM/JSON feeds
-  git -C "$srcdir/$_pkgname" revert -n cda0f79e11df77a1f88b264524a75cd38b134584
   # revert: save column width of feed view and make it changeable
   git -C "$srcdir/$_pkgname" revert -n 2ed50e55f99ea1067fc64a8af18276cd1f737151
 }
