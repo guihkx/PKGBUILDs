@@ -3,6 +3,7 @@
 **/*.sig
 **/*.tar.*
 **/*.run
+**/*.log
 
 ffmpeg/ffmpeg
 ffmpeg/nv-codec-headers
