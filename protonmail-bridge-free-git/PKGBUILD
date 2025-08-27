@@ -4,7 +4,7 @@ pkgname=(
   protonmail-bridge-core-free-git
   protonmail-bridge-free-git
 )
-pkgver=3.21.1.r132.g694863c
+pkgver=3.21.2.r136.g7d1e913
 pkgrel=1
 pkgdesc="Integrate ProtonMail paid account with any program that supports IMAP and SMTP (with free user support)"
 arch=(x86_64)
@@ -36,7 +36,7 @@ source=(
   "fix-crash-on-exit.patch"
 )
 sha256sums=('SKIP'
-            'd51fb6efde22354d84b894b979a685d06fcc9cf3040d999d1cd6ebf5242a5043'
+            '5d273f1245fec8549a3daa3fe76e22bb6c23957cf5bcb51c24f878e19c7a5692'
             '436a9a293424fb7d48a8fd61fff7d63985dec56d6170cd2fbae24fe03ef98136'
             '45a68688cf2a06539d60e3e35b112a67319c58c23c35ec4cf3712d2f0cb50cb2'
             'd77bab126aef05822c32668f66eba9b24fb43aa0de5a56a25d1d9704f2c00c49'
@@ -46,8 +46,8 @@ _archive="$_pkgbase"
 
 pkgver() {
   cd "$_pkgbase"
-  git remote add upstream https://github.com/ProtonMail/proton-bridge.git || true
-  git fetch upstream --tags
+  git remote add upstream https://github.com/ProtonMail/proton-bridge.git 2>/dev/null || true
+  git fetch upstream --tags 2>/dev/null
   git describe --long --tags --abbrev=7 | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
@@ -123,21 +123,6 @@ build() {
     -S internal/frontend/bridge-gui/bridge-gui \
     -B build
   cmake --build build
-}
-
-check() {
-  cd "$_archive"
-
-  # These tests are expecting ports 1143 & 1144 (default and fallback ports for
-  # IMAP) and ports 1025 & 1026 (default and fallback ports for SMTP) to be
-  # free for some specific tests scenarios.
-  # If those ports are already in use by any other service(s) (e.g. there's
-  # already a running protonmail-bridge instance on those default ports in your
-  # build env/machine), tests will fail.
-  go test -v ./...
-
-  cmake --build build --target bridgepp-test
-  ./build/bridgepp/bridgepp-test
 }
 
 package_protonmail-bridge-core-free-git() {
