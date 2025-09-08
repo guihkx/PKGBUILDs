@@ -5,9 +5,9 @@
 # Contributor: speps <speps dot aur dot archlinux dot org>
 
 _pkgname=rssguard
-_commit=459f5a8a4a7621f3fc578cfa49ef18bd46121644
+_commit=ff032516b88836b3c0baffd4a490d0b1fd2ebe76
 pkgname=rssguard-lite
-pkgver=4.8.5.r13.g459f5a8
+pkgver=4.8.6.r0.gff03251
 pkgrel=1
 pkgdesc='Simple (yet powerful) Qt feed reader without WebEngine support'
 arch=(x86_64)
@@ -32,7 +32,7 @@ conflicts=(rssguard)
 provides=(rssguard=$pkgver)
 replaces=(rssguard-nowebengine)
 source=(git+https://github.com/martinrotter/rssguard#commit=$_commit)
-sha256sums=('ba37cdd63e8ac82996a9095b6d0ea6b6dbb64b80390d297dc350086445f4219c')
+sha256sums=('5ade476e36a2e00191ec54d913dd6ab865406f0e62eba994b4fb1e4fcb37b783')
 
 pkgver() {
   git -C "$srcdir/$_pkgname" describe --long --abbrev=7 | sed 's/\([^-]*-g\)/r\1/;s/-/./g'

@@ -1,0 +1,29 @@
+pkgbase = rssguard-lite
+	pkgdesc = Simple (yet powerful) Qt feed reader without WebEngine support
+	pkgver = 4.8.5.r13.g459f5a8
+	pkgrel = 1
+	url = https://github.com/martinrotter/rssguard
+	arch = x86_64
+	license = GPL-3.0-only
+	makedepends = cmake
+	makedepends = git
+	makedepends = qt6-tools
+	makedepends = qt6-webengine
+	depends = gcc-libs
+	depends = glibc
+	depends = libglvnd
+	depends = mpv
+	depends = qt6-5compat
+	depends = qt6-base
+	depends = qt6-declarative
+	depends = qt6-multimedia
+	depends = sqlite
+	optdepends = clang: Support for beautification of message filter scripts
+	optdepends = mariadb-libs: Support for MariaDB-based data storage
+	provides = rssguard=4.8.5.r13.g459f5a8
+	conflicts = rssguard
+	replaces = rssguard-nowebengine
+	source = git+https://github.com/martinrotter/rssguard#commit=ff032516b88836b3c0baffd4a490d0b1fd2ebe76
+	sha256sums = ba37cdd63e8ac82996a9095b6d0ea6b6dbb64b80390d297dc350086445f4219c
+
+pkgname = rssguard-lite
